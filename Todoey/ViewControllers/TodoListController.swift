@@ -10,51 +10,15 @@ import UIKit
 
 class TodoListController: UITableViewController {
     
-    var arrayTodo = [ItemObj]()
+    var arrayTodo = [Item]()
     let cellIdentifier : String = "ToDoItem"
     let keyUserDefault : String = "ARRAY_TODO"
     let userDefault = UserDefaults.standard
     var dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Item.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        loadDataFromUserDefault()
-        readDataFromFile(url: dataFilePath!)
-        print(dataFilePath!)
-    }
-    
-    //MARK: Save and load to UserDefault
-    func loadDataFromUserDefault(){
-        if let items = userDefault.array(forKey: keyUserDefault) as? [ItemObj] {
-            arrayTodo = items
-        }
-    }
-
-    func saveToUserDefault(){
-        userDefault.set(arrayTodo, forKey: keyUserDefault)
-        userDefault.synchronize()
-    }
-    
-    //MARK: Write data to file
-    func writeDataToFile(item: ItemObj){
-        let encoder = PropertyListEncoder()
-        do{
-            let data = try encoder.encode(self.arrayTodo)
-            try data.write(to: self.dataFilePath!)
-        }catch{
-            print("Error \(error)")
-        }
-    }
-
-    func readDataFromFile(url : URL){
-        if let data = try? Data(contentsOf: url) {
-            do{
-                let decoder = PropertyListDecoder()
-                arrayTodo = try decoder.decode([ItemObj].self, from: data)
-            }catch{
-                print("Error\(error)")
-            }
-        }
     }
     
     //MARK: TableView datasource - delegate
@@ -93,22 +57,22 @@ class TodoListController: UITableViewController {
             
             if textField.text?.isEmpty ?? true{
             }else{
-                let item = ItemObj(title_str: textField.text!, done_status: false)
-                self.arrayTodo.append(item)
-                self.tableView .reloadData()
-                let encoder = PropertyListEncoder()
-                do{
-                    let data = try encoder.encode(self.arrayTodo)
-                    try data.write(to: self.dataFilePath!)
-                }catch{
-                    print("Error \(error)")
-                }
-                //                self.saveToUserDefault()
-                self.writeDataToFile(item: item)
+                let newItem = Item(context: self.context)
+                newItem.title = textField.text!
+                newItem.done = false
+                self.saveItem(item: newItem)
             }
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
+    }
+    
+    func saveItem(item : Item){
+        do{
+            try self.context.save()
+        }catch{
+            print("Has error when saving \(error)")
+        }
     }
     
 }
