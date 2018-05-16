@@ -10,7 +10,7 @@ import UIKit
 
 class TodoListController: UITableViewController {
     
-    var arrayTodo = [Item]()
+    var arrayTodo = [ItemObj]()
     let cellIdentifier : String = "ToDoItem"
     let keyUserDefault : String = "ARRAY_TODO"
     let userDefault = UserDefaults.standard
@@ -25,18 +25,18 @@ class TodoListController: UITableViewController {
     
     //MARK: Save and load to UserDefault
     func loadDataFromUserDefault(){
-        if let items = userDefault.array(forKey: keyUserDefault) as? [Item] {
+        if let items = userDefault.array(forKey: keyUserDefault) as? [ItemObj] {
             arrayTodo = items
         }
     }
-    
+
     func saveToUserDefault(){
         userDefault.set(arrayTodo, forKey: keyUserDefault)
         userDefault.synchronize()
     }
     
     //MARK: Write data to file
-    func writeDataToFile(item: Item){
+    func writeDataToFile(item: ItemObj){
         let encoder = PropertyListEncoder()
         do{
             let data = try encoder.encode(self.arrayTodo)
@@ -45,12 +45,12 @@ class TodoListController: UITableViewController {
             print("Error \(error)")
         }
     }
-    
+
     func readDataFromFile(url : URL){
         if let data = try? Data(contentsOf: url) {
             do{
                 let decoder = PropertyListDecoder()
-                arrayTodo = try decoder.decode([Item].self, from: data)
+                arrayTodo = try decoder.decode([ItemObj].self, from: data)
             }catch{
                 print("Error\(error)")
             }
@@ -93,16 +93,16 @@ class TodoListController: UITableViewController {
             
             if textField.text?.isEmpty ?? true{
             }else{
-                let item = Item(title_str: textField.text!, done_status: false)
+                let item = ItemObj(title_str: textField.text!, done_status: false)
                 self.arrayTodo.append(item)
                 self.tableView .reloadData()
-//                let encoder = PropertyListEncoder()
-//                do{
-//                    let data = try encoder.encode(self.arrayTodo)
-//                    try data.write(to: self.dataFilePath!)
-//                }catch{
-//                    print("Error \(error)")
-//                }
+                let encoder = PropertyListEncoder()
+                do{
+                    let data = try encoder.encode(self.arrayTodo)
+                    try data.write(to: self.dataFilePath!)
+                }catch{
+                    print("Error \(error)")
+                }
                 //                self.saveToUserDefault()
                 self.writeDataToFile(item: item)
             }
