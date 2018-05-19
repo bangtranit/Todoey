@@ -8,14 +8,15 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 class CatalogController: UITableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    var arrayCalalog = [Catalog]()
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    let cellIdentifer : String = "CatologItem"
+    let realm = try! Realm()
+    var arrayCalalog : Results<Catalog>?
+    var cellIdentifer : String = "CatologItem"
     var rowChoosed : Int = 0
     
     override func viewDidLoad() {
@@ -35,12 +36,12 @@ class CatalogController: UITableViewController {
     
     //MARK: Table DataSource
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return arrayCalalog.count
+        return arrayCalalog?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifer, for: indexPath)
-        cell.textLabel?.text = arrayCalalog[indexPath.row].name
+        cell.textLabel?.text = arrayCalalog?[indexPath.row].name ?? "No catalog added yet"
         return cell
     }
     //MARK: Table Delegate
@@ -53,32 +54,27 @@ class CatalogController: UITableViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! TodoListController
-        //        if let indexPath = tableView.indexPathForSelectedRow{
-        destinationVC.parentCatalog = arrayCalalog[rowChoosed]
-        //        }
+        destinationVC.parentCatalog = arrayCalalog?[rowChoosed]
     }
     
     //MARK: Database
     func loadAllCatalog(){
-        let request : NSFetchRequest<Catalog> = Catalog.fetchRequest()
-        loadCatalog(request: request)
+        loadCatalog()
     }
     
-    func saveCatalog(){
+    func saveCatalog(catalog : Catalog){
         do{
-            try context.save()
+            try realm.write {
+                realm.add(catalog)
+            }
         }catch{
             print("Error \(error)")
         }
         tableView.reloadData()
     }
     
-    func loadCatalog(request : NSFetchRequest<Catalog> = Catalog.fetchRequest()){
-        do{
-            arrayCalalog = try context.fetch(request)
-        }catch{
-            print("error \(error)")
-        }
+    func loadCatalog(){
+        arrayCalalog = realm.objects(Catalog.self)
         tableView.reloadData()
     }
     
@@ -95,10 +91,9 @@ class CatalogController: UITableViewController {
             
             if textField.text?.isEmpty ?? true{
             }else{
-                let newCatalog = Catalog(context: self.context)
+                let newCatalog = Catalog()
                 newCatalog.name = textField.text!
-                self.arrayCalalog.append(newCatalog)
-                self.saveCatalog()
+                self.saveCatalog(catalog: newCatalog)
             }
         }
         alert.addAction(action)
@@ -108,29 +103,29 @@ class CatalogController: UITableViewController {
 }
 
 //SearchBar
-extension CatalogController : UISearchBarDelegate{
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        print("search bar \(searchBar.text!)")
-        if searchBar.text?.isEmpty ?? true{
-            loadAllCatalog()
-            searchBar.resignFirstResponder()
-        }else{
-            searchByKeyWord(keyword: searchBar.text!)
-        }
-    }
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchByKeyWord(keyword: searchBar.text!)
-    }
-    
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        print("Cancel")
-    }
-    
-    func searchByKeyWord(keyword:String){
-        let fetRequest : NSFetchRequest<Catalog> = Catalog.fetchRequest()
-        fetRequest.predicate = NSPredicate(format: "name CONTAINS[cd] %@", keyword)
-        fetRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-        loadCatalog(request: fetRequest)
-    }
-}
+//extension CatalogController : UISearchBarDelegate{
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        print("search bar \(searchBar.text!)")
+//        if searchBar.text?.isEmpty ?? true{
+//            loadAllCatalog()
+//            searchBar.resignFirstResponder()
+//        }else{
+//            searchByKeyWord(keyword: searchBar.text!)
+//        }
+//    }
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        searchByKeyWord(keyword: searchBar.text!)
+//    }
+//
+//    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+//        print("Cancel")
+//    }
+//
+//    func searchByKeyWord(keyword:String){
+//        let fetRequest : NSFetchRequest<Catalog> = Catalog.fetchRequest()
+//        fetRequest.predicate = NSPredicate(format: "name CONTAINS[cd] %@", keyword)
+//        fetRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+//        loadCatalog(request: fetRequest)
+//    }
+//}

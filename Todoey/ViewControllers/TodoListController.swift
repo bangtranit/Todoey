@@ -8,16 +8,16 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 class TodoListController: UITableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
-    var arrayTodo = [Item]()
+    var arrayTodo : Results<Item>?
+    let realm = try! Realm()
+    
     let cellIdentifier : String = "ToDoItem"
-    let userDefault = UserDefaults.standard
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     var parentCatalog : Catalog? {
         didSet{
-            print("didSet Value : \(String(describing: parentCatalog?.name!))")
             loadAllTask()
         }
     }
@@ -33,19 +33,23 @@ class TodoListController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return arrayTodo.count
+        return arrayTodo?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {   
         let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
-        cell.textLabel?.text = arrayTodo[indexPath.row].title
-        cell.accessoryType = arrayTodo[indexPath.row].done == true ? .checkmark : .none
+        if let item = arrayTodo?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.done == true ? .checkmark : .none
+        }else{
+            cell.textLabel?.text = "There aren't any item"
+        }
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        arrayTodo[indexPath.row].setValue(!arrayTodo[indexPath.row].done, forKey: "done")
-        saveItem()
+        //        arrayTodo![indexPath.row].setValue(!arrayTodo![indexPath.row].done, forKey: "done")
+        //        saveItem(item: Item)
         tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.fade)
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -63,12 +67,22 @@ class TodoListController: UITableViewController {
             
             if textField.text?.isEmpty ?? true{
             }else{
-                let newItem = Item(context: self.context)
+//                do{
+//                    try self.realm.write {
+//                        let newItem = Item()
+//                        newItem.title = textField.text!
+//                        newItem.done = false
+////                        self.parentCatalog?.items.append(newItem)
+//                    }
+//                }catch{
+//                    print("Error when add new item \(error)")
+//                }
+//                self.tableView.reloadData()
+                let newItem = Item()
                 newItem.title = textField.text!
                 newItem.done = false
-                newItem.parrentCatalog = self.parentCatalog
-                self.arrayTodo.append(newItem)
-                self.saveItem()
+
+                self.saveItem(item: newItem)
             }
         }
         alert.addAction(action)
@@ -76,61 +90,49 @@ class TodoListController: UITableViewController {
     }
     
     //MARK: Database
-    func saveItem(){
+    func saveItem(item: Item){
         do{
-            try self.context.save()
+            try realm.write {
+                realm.add(item)
+                self.parentCatalog?.items.append(item)
+            }
         }catch{
-            print("Has error when saving \(error)")
+            print("Error when add new item \(error)")
         }
         tableView.reloadData()
     }
     
-    func loadItem(request: NSFetchRequest<Item> = Item.fetchRequest(), predicate : NSPredicate? = nil){
-        let catalogPredicate = NSPredicate(format: "parrentCatalog.name MATCHES[cd] %@", (parentCatalog?.name)!)
-        if let additionPredicate = predicate{
-            //if search
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [catalogPredicate, additionPredicate])
-        }else{
-            //if load all
-            request.predicate = catalogPredicate
-        }
+    func loadItem(){
+        arrayTodo = parentCatalog?.items.sorted(byKeyPath: "title", ascending: true)
         
-        do{
-            arrayTodo = try context.fetch(request)
-        }catch{
-            print("Error when loading item \(error)")
-        }
     }
     
     func loadAllTask(){
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        let predicate = NSPredicate(format: "parrentCatalog.name MATCHES[cd] %@", (parentCatalog?.name)!)
-        loadItem(request: request, predicate: predicate)
         tableView.reloadData()
     }
 }
 
 //MARK: Search bar
-extension TodoListController : UISearchBarDelegate{
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchWithKeyWord(keyword: searchBar.text!)
-    }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        searchWithKeyWord(keyword: searchBar.text!)
-        if searchBar.text?.isEmpty == true {
-            self.loadAllTask()
-            self.searchBar.resignFirstResponder()
-        }
-    }
-    
-    func searchWithKeyWord(keyword: String){
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", keyword)
-        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        loadItem(request: request, predicate: predicate)
-        tableView.reloadData()
-    }
-}
+//extension TodoListController : UISearchBarDelegate{
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        searchWithKeyWord(keyword: searchBar.text!)
+//    }
+//
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        searchWithKeyWord(keyword: searchBar.text!)
+//        if searchBar.text?.isEmpty == true {
+//            self.loadAllTask()
+//            self.searchBar.resignFirstResponder()
+//        }
+//    }
+//
+//    func searchWithKeyWord(keyword: String){
+//        let request : NSFetchRequest<Item> = Item.fetchRequest()
+//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", keyword)
+//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+//        loadItem(request: request, predicate: predicate)
+//        tableView.reloadData()
+//    }
+//}
 

@@ -75,7 +75,7 @@
             </objects>
             <point key="canvasLocation" x="206" y="42"/>
         </scene>
-        <!--Catalog Controller-->
+        <!--Catalog-->
         <scene sceneID="q8c-WR-pFv">
             <objects>
                 <tableViewController id="4Ha-uH-LgA" customClass="CatalogController" customModule="Todoey" customModuleProvider="target" sceneMemberID="viewController">
@@ -106,7 +106,7 @@
                             <outlet property="delegate" destination="4Ha-uH-LgA" id="Inh-Lz-owa"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" id="mKG-cF-0Fr">
+                    <navigationItem key="navigationItem" title="Catalog" id="mKG-cF-0Fr">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="k15-mb-QAQ">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
