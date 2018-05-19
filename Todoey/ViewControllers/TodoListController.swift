@@ -15,10 +15,15 @@ class TodoListController: UITableViewController {
     let cellIdentifier : String = "ToDoItem"
     let userDefault = UserDefaults.standard
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var parentCatalog : Catalog? {
+        didSet{
+            print("didSet Value : \(String(describing: parentCatalog?.name!))")
+            loadAllTask()
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadAllTask()
     }
     
     //MARK: TableView datasource - delegate
@@ -61,6 +66,7 @@ class TodoListController: UITableViewController {
                 let newItem = Item(context: self.context)
                 newItem.title = textField.text!
                 newItem.done = false
+                newItem.parrentCatalog = self.parentCatalog
                 self.arrayTodo.append(newItem)
                 self.saveItem()
             }
@@ -79,7 +85,16 @@ class TodoListController: UITableViewController {
         tableView.reloadData()
     }
     
-    func loadItem(request: NSFetchRequest<Item> = Item.fetchRequest()){
+    func loadItem(request: NSFetchRequest<Item> = Item.fetchRequest(), predicate : NSPredicate? = nil){
+        let catalogPredicate = NSPredicate(format: "parrentCatalog.name MATCHES[cd] %@", (parentCatalog?.name)!)
+        if let additionPredicate = predicate{
+            //if search
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [catalogPredicate, additionPredicate])
+        }else{
+            //if load all
+            request.predicate = catalogPredicate
+        }
+        
         do{
             arrayTodo = try context.fetch(request)
         }catch{
@@ -89,7 +104,8 @@ class TodoListController: UITableViewController {
     
     func loadAllTask(){
         let request : NSFetchRequest<Item> = Item.fetchRequest()
-        loadItem(request: request)
+        let predicate = NSPredicate(format: "parrentCatalog.name MATCHES[cd] %@", (parentCatalog?.name)!)
+        loadItem(request: request, predicate: predicate)
         tableView.reloadData()
     }
 }
@@ -111,9 +127,9 @@ extension TodoListController : UISearchBarDelegate{
     
     func searchWithKeyWord(keyword: String){
         let request : NSFetchRequest<Item> = Item.fetchRequest()
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", keyword)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", keyword)
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        loadItem(request: request)
+        loadItem(request: request, predicate: predicate)
         tableView.reloadData()
     }
 }
