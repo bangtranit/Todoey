@@ -79,9 +79,9 @@ class TodoListController: UITableViewController {
         tableView.reloadData()
     }
     
-    func loadItem(request: NSFetchRequest<Item>){
+    func loadItem(request: NSFetchRequest<Item> = Item.fetchRequest()){
         do{
-          arrayTodo = try context.fetch(request)
+            arrayTodo = try context.fetch(request)
         }catch{
             print("Error when loading item \(error)")
         }
@@ -96,7 +96,7 @@ class TodoListController: UITableViewController {
 
 //MARK: Search bar
 extension TodoListController : UISearchBarDelegate{
-
+    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchWithKeyWord(keyword: searchBar.text!)
     }
@@ -104,7 +104,8 @@ extension TodoListController : UISearchBarDelegate{
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchWithKeyWord(keyword: searchBar.text!)
         if searchBar.text?.isEmpty == true {
-            loadAllTask()
+            self.loadAllTask()
+            self.searchBar.resignFirstResponder()
         }
     }
     
