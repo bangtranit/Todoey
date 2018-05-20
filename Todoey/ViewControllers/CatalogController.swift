@@ -8,16 +8,15 @@
 
 import UIKit
 import RealmSwift
-import SwipeCellKit
+import ChameleonFramework
 
-class CatalogController: UITableViewController {
-    
+class CatalogController: SwipeTableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
     let realm = try! Realm()
     var arrayCalalog : Results<Catalog>?
-    var cellIdentifer : String = "CatologItem"
+    var cellIdentifer : String = "catalogcell"
     var rowChoosed : Int = 0
     
     override func viewDidLoad() {
@@ -29,6 +28,7 @@ class CatalogController: UITableViewController {
     //MARK: Init
     func initUI(){
         tableView.rowHeight = 70.0
+        tableView.separatorStyle = .none
     }
     
     func initData(){
@@ -41,9 +41,9 @@ class CatalogController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifer, for: indexPath) as! SwipeTableViewCell
-        cell.delegate = self
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = arrayCalalog?[indexPath.row].name ?? "No catalog added yet"
+        cell.backgroundColor = UIColor(hexString: (arrayCalalog?[indexPath.row].color)!)
         return cell
     }
     //MARK: Table Delegate
@@ -57,6 +57,17 @@ class CatalogController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! TodoListController
         destinationVC.parentCatalog = arrayCalalog?[rowChoosed]
+    }
+    
+    override func handleDelete(indexPath: IndexPath) {
+        super.handleDelete(indexPath: indexPath)
+        do{
+            try realm.write {
+                realm.delete((self.arrayCalalog?[indexPath.row])!)
+            }
+        }catch{
+            print("Error when try to delete \(error)")
+        }
     }
     
     //MARK: Database
@@ -80,7 +91,6 @@ class CatalogController: UITableViewController {
         tableView.reloadData()
     }
     
-    
     //MARK: Button action
     @IBAction func onClickAddCatalog(_ sender: UIBarButtonItem) {
         var textField = UITextField()
@@ -96,13 +106,13 @@ class CatalogController: UITableViewController {
             }else{
                 let newCatalog = Catalog()
                 newCatalog.name = textField.text!
+                newCatalog.color = UIColor.randomFlat.hexValue()
                 self.saveCatalog(catalog: newCatalog)
             }
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
-    
 }
 
 //MARK: Search bar
@@ -131,41 +141,3 @@ extension CatalogController : UISearchBarDelegate{
         
     }
 }
-
-//MARK: Swipe cell delegate
-extension CatalogController : SwipeTableViewCellDelegate{
-    func visibleRect(for tableView: UITableView) -> CGRect? {
-        return CGRect(x: 0, y: 0, width: 0, height: 0)
-    }
-    
-    
-    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        guard orientation == .right else { return nil }
-        
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
-            print("Delete at index %i",indexPath.row)
-            do{
-                try self.realm.write {
-                    self.realm.delete((self.arrayCalalog?[indexPath.row])!)
-                    self.tableView.reloadData()
-                }
-            }catch{
-                print("Error while try to delete object \(error)")
-            }
-        }
-        
-        // customize the action appearance
-        deleteAction.image = UIImage(named: "TrashIcon")
-        
-        return [deleteAction]
-    }
-    
-    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
-        var options = SwipeTableOptions()
-        options.expansionStyle = .destructive
-        options.transitionStyle = .border
-        return options
-    }
-
-}
-

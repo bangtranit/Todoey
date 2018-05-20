@@ -7,9 +7,9 @@
 //
 
 import UIKit
-import CoreData
 import RealmSwift
-class TodoListController: UITableViewController {
+import ChameleonFramework
+class TodoListController: SwipeTableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     var arrayTodo : Results<Item>?
@@ -24,6 +24,13 @@ class TodoListController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        initUI()
+    }
+    
+    func initUI(){
+        tableView.rowHeight = 70.0
+        tableView.separatorStyle = .none
+        navigationController?.navigationBar.barTintColor = UIColor(hexString: (parentCatalog?.color)!)
     }
     
     //MARK: TableView datasource - delegate
@@ -37,10 +44,15 @@ class TodoListController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {   
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
+//        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let item = arrayTodo?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done == true ? .checkmark : .none
+            if let color = UIColor(hexString: (parentCatalog?.color)!)?.darken(byPercentage: CGFloat(indexPath.row)/CGFloat((arrayTodo?.count)!)){
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
         }else{
             cell.textLabel?.text = "There aren't any item"
         }
@@ -60,26 +72,15 @@ class TodoListController: UITableViewController {
         tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.fade)
     }
     
-    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
-    }
-    
-    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
-            print("index path of delete: \(indexPath)")
-            do{
-                try self.realm.write {
-                    self.realm.delete((self.arrayTodo?[indexPath.row])!)
-                }
-            }catch{
-                print("Can't delete with error \(error)")
+    //MARK: Handel remove item
+    override func handleDelete(indexPath: IndexPath) {
+        do{
+            try realm.write {
+                self.realm.delete((self.arrayTodo?[indexPath.row])!)
             }
-            completionHandler(true)
+        }catch{
+            print("Error when try to delete item \(error)")
         }
-        
-        let swipeActionConfig = UISwipeActionsConfiguration(actions: [delete])
-        swipeActionConfig.performsFirstActionWithFullSwipe = false
-        return swipeActionConfig
     }
     
     //MARK: Add new action
