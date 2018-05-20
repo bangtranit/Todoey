@@ -46,6 +46,28 @@ class CatalogController: UITableViewController {
     }
     //MARK: Table Delegate
     
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
+            print("index path of delete: \(indexPath)")
+            do{
+                try self.realm.write {
+                    self.realm.delete((self.arrayCalalog?[indexPath.row])!)
+                }
+            }catch{
+                print("Can't delete with error \(error)")
+            }
+            completionHandler(true)
+        }
+        
+        let swipeActionConfig = UISwipeActionsConfiguration(actions: [delete])
+        swipeActionConfig.performsFirstActionWithFullSwipe = false
+        return swipeActionConfig
+    }
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         rowChoosed = Int(indexPath.row)
@@ -79,6 +101,7 @@ class CatalogController: UITableViewController {
     }
     
     
+    //MARK: Button action
     @IBAction func onClickAddCatalog(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Catalog", message: "Add new catalog", preferredStyle: .alert)
@@ -102,30 +125,29 @@ class CatalogController: UITableViewController {
     
 }
 
-//SearchBar
-//extension CatalogController : UISearchBarDelegate{
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        print("search bar \(searchBar.text!)")
-//        if searchBar.text?.isEmpty ?? true{
-//            loadAllCatalog()
-//            searchBar.resignFirstResponder()
-//        }else{
-//            searchByKeyWord(keyword: searchBar.text!)
-//        }
-//    }
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        searchByKeyWord(keyword: searchBar.text!)
-//    }
-//
-//    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-//        print("Cancel")
-//    }
-//
-//    func searchByKeyWord(keyword:String){
-//        let fetRequest : NSFetchRequest<Catalog> = Catalog.fetchRequest()
-//        fetRequest.predicate = NSPredicate(format: "name CONTAINS[cd] %@", keyword)
-//        fetRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-//        loadCatalog(request: fetRequest)
-//    }
-//}
+//MARK: Search bar
+extension CatalogController : UISearchBarDelegate{
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        print("search bar \(searchBar.text!)")
+        if searchBar.text?.isEmpty ?? true{
+            loadAllCatalog()
+            searchBar.resignFirstResponder()
+        }else{
+            searchByKeyWord(keyword: searchBar.text!)
+        }
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchByKeyWord(keyword: searchBar.text!)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        print("Cancel")
+    }
+    
+    func searchByKeyWord(keyword:String){
+        arrayCalalog = arrayCalalog?.filter("name CONTAINS[cd] %@", keyword).sorted(byKeyPath: "name", ascending: true)
+        tableView.reloadData()
+        
+    }
+}

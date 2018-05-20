@@ -48,10 +48,38 @@ class TodoListController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //        arrayTodo![indexPath.row].setValue(!arrayTodo![indexPath.row].done, forKey: "done")
-        //        saveItem(item: Item)
+        if let item = arrayTodo?[indexPath.row]{
+            do{
+                try realm.write {
+                    item.done = !item.done
+                }
+            }catch{
+                print("Error saving \(error)")
+            }
+        }
         tableView.reloadRows(at: [indexPath], with: UITableViewRowAnimation.fade)
-        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
+            print("index path of delete: \(indexPath)")
+            do{
+                try self.realm.write {
+                    self.realm.delete((self.arrayTodo?[indexPath.row])!)
+                }
+            }catch{
+                print("Can't delete with error \(error)")
+            }
+            completionHandler(true)
+        }
+        
+        let swipeActionConfig = UISwipeActionsConfiguration(actions: [delete])
+        swipeActionConfig.performsFirstActionWithFullSwipe = false
+        return swipeActionConfig
     }
     
     //MARK: Add new action
@@ -67,21 +95,10 @@ class TodoListController: UITableViewController {
             
             if textField.text?.isEmpty ?? true{
             }else{
-//                do{
-//                    try self.realm.write {
-//                        let newItem = Item()
-//                        newItem.title = textField.text!
-//                        newItem.done = false
-////                        self.parentCatalog?.items.append(newItem)
-//                    }
-//                }catch{
-//                    print("Error when add new item \(error)")
-//                }
-//                self.tableView.reloadData()
                 let newItem = Item()
                 newItem.title = textField.text!
                 newItem.done = false
-
+                newItem.dateCreated = DateHelper.sharedDateHelper.getCurrentDate()
                 self.saveItem(item: newItem)
             }
         }
@@ -103,36 +120,33 @@ class TodoListController: UITableViewController {
     }
     
     func loadItem(){
-        arrayTodo = parentCatalog?.items.sorted(byKeyPath: "title", ascending: true)
-        
+        arrayTodo = parentCatalog?.items.sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
     }
     
     func loadAllTask(){
-        tableView.reloadData()
+        loadItem()
     }
 }
 
 //MARK: Search bar
-//extension TodoListController : UISearchBarDelegate{
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        searchWithKeyWord(keyword: searchBar.text!)
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        searchWithKeyWord(keyword: searchBar.text!)
-//        if searchBar.text?.isEmpty == true {
-//            self.loadAllTask()
-//            self.searchBar.resignFirstResponder()
-//        }
-//    }
-//
-//    func searchWithKeyWord(keyword: String){
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", keyword)
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//        loadItem(request: request, predicate: predicate)
-//        tableView.reloadData()
-//    }
-//}
+extension TodoListController : UISearchBarDelegate{
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchWithKeyWord(keyword: searchBar.text!)
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        searchWithKeyWord(keyword: searchBar.text!)
+        if searchBar.text?.isEmpty == true {
+            self.loadAllTask()
+            self.searchBar.resignFirstResponder()
+        }
+    }
+
+    func searchWithKeyWord(keyword: String){
+        arrayTodo = arrayTodo?.filter( "title CONTAINS[cd] %@", keyword).sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
+    }
+}
 

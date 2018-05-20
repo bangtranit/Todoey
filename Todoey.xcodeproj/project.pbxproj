@@ -15,6 +15,7 @@
 		A8316EED20A852EA00AD4E69 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A8316EEB20A852EA00AD4E69 /* LaunchScreen.storyboard */; };
 		A853480220B072E9004C5A10 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = A853480120B072E9004C5A10 /* Item.swift */; };
 		A853480420B072FA004C5A10 /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A853480320B072FA004C5A10 /* Catalog.swift */; };
+		A853480A20B12300004C5A10 /* DateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A853480920B12300004C5A10 /* DateHelper.swift */; };
 		A87444A720B00FC6000C38BA /* CatalogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87444A620B00FC6000C38BA /* CatalogController.swift */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		A8316EEE20A852EA00AD4E69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A853480120B072E9004C5A10 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		A853480320B072FA004C5A10 /* Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalog.swift; sourceTree = "<group>"; };
+		A853480920B12300004C5A10 /* DateHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHelper.swift; sourceTree = "<group>"; };
 		A87444A620B00FC6000C38BA /* CatalogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -119,6 +121,7 @@
 		A8316EE120A852E900AD4E69 /* Todoey */ = {
 			isa = PBXGroup;
 			children = (
+				A853480620B122DB004C5A10 /* Helper */,
 				A885A59820AC8A690013D250 /* Resources */,
 				A81E315E20A9DF94007678BC /* Views */,
 				A81E315D20A9DF90007678BC /* Data Models */,
@@ -128,6 +131,14 @@
 				A8316EEE20A852EA00AD4E69 /* Info.plist */,
 			);
 			path = Todoey;
+			sourceTree = "<group>";
+		};
+		A853480620B122DB004C5A10 /* Helper */ = {
+			isa = PBXGroup;
+			children = (
+				A853480920B12300004C5A10 /* DateHelper.swift */,
+			);
+			path = Helper;
 			sourceTree = "<group>";
 		};
 		A885A59820AC8A690013D250 /* Resources */ = {
@@ -262,6 +273,7 @@
 				A853480220B072E9004C5A10 /* Item.swift in Sources */,
 				A8316EE520A852EA00AD4E69 /* TodoListController.swift in Sources */,
 				A87444A720B00FC6000C38BA /* CatalogController.swift in Sources */,
+				A853480A20B12300004C5A10 /* DateHelper.swift in Sources */,
 				A853480420B072FA004C5A10 /* Catalog.swift in Sources */,
 				A8316EE320A852E900AD4E69 /* AppDelegate.swift in Sources */,
 			);
