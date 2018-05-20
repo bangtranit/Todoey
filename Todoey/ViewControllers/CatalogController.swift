@@ -7,10 +7,11 @@
 //
 
 import UIKit
-import CoreData
 import RealmSwift
+import SwipeCellKit
 
 class CatalogController: UITableViewController {
+    
     
     @IBOutlet weak var searchBar: UISearchBar!
     
@@ -27,7 +28,7 @@ class CatalogController: UITableViewController {
     
     //MARK: Init
     func initUI(){
-        
+        tableView.rowHeight = 70.0
     }
     
     func initData(){
@@ -40,33 +41,12 @@ class CatalogController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifer, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifer, for: indexPath) as! SwipeTableViewCell
+        cell.delegate = self
         cell.textLabel?.text = arrayCalalog?[indexPath.row].name ?? "No catalog added yet"
         return cell
     }
     //MARK: Table Delegate
-    
-    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
-    }
-    
-    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let delete = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
-            print("index path of delete: \(indexPath)")
-            do{
-                try self.realm.write {
-                    self.realm.delete((self.arrayCalalog?[indexPath.row])!)
-                }
-            }catch{
-                print("Can't delete with error \(error)")
-            }
-            completionHandler(true)
-        }
-        
-        let swipeActionConfig = UISwipeActionsConfiguration(actions: [delete])
-        swipeActionConfig.performsFirstActionWithFullSwipe = false
-        return swipeActionConfig
-    }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
@@ -151,3 +131,41 @@ extension CatalogController : UISearchBarDelegate{
         
     }
 }
+
+//MARK: Swipe cell delegate
+extension CatalogController : SwipeTableViewCellDelegate{
+    func visibleRect(for tableView: UITableView) -> CGRect? {
+        return CGRect(x: 0, y: 0, width: 0, height: 0)
+    }
+    
+    
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else { return nil }
+        
+        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+            print("Delete at index %i",indexPath.row)
+            do{
+                try self.realm.write {
+                    self.realm.delete((self.arrayCalalog?[indexPath.row])!)
+                    self.tableView.reloadData()
+                }
+            }catch{
+                print("Error while try to delete object \(error)")
+            }
+        }
+        
+        // customize the action appearance
+        deleteAction.image = UIImage(named: "TrashIcon")
+        
+        return [deleteAction]
+    }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
+        var options = SwipeTableOptions()
+        options.expansionStyle = .destructive
+        options.transitionStyle = .border
+        return options
+    }
+
+}
+

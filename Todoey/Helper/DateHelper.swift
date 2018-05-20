@@ -14,17 +14,13 @@ class DateHelper: NSObject {
         return sharedInstance
     }
     
-//    func formatStringToDate(dateString: String, format : NSString) -> NSDate{
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateFormat = format as String?
-//        if guard let date = dateFormatter.date(from: dateString){
-//            return date
-//        } else {
-//            fatalError("ERROR: Date conversion failed due to mismatched format.")
-//            return getCurrentDate()
-//        }
-//    }
-
+    func formatStringToDate(dateString: String, format : NSString) -> Date{
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = format as String?
+        let date = dateFormatter.date(from: dateString)
+        return date!
+    }
+    
     func getCurrentDate() -> Date{
         let date = Date()
         return date
